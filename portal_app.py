@@ -4,6 +4,7 @@ import requests
 import io
 import re
 from PIL import Image, ImageDraw
+import os
 
 st.set_page_config(page_title="YPG Credentials Portal", page_icon="🇬🇭", layout="centered")
 
@@ -13,15 +14,6 @@ CORRECTION_LINK = "https://forms.gle/tbfSs7G6D8PyKYUb9"
 
 # Your Google Drive File ID
 DATABASE_FILE_ID = "1-SmT8WIVy0FyE-NBKxPA5QSjkSX96ArS"
-
-def extract_gdrive_id(url):
-    if pd.isna(url): return None
-    url_str = str(url)
-    match = re.search(r'id=([a-zA-Z0-9_-]+)', url_str)
-    if match: return match.group(1)
-    match = re.search(r'/file/d/([a-zA-Z0-9_-]+)', url_str)
-    if match: return match.group(1)
-    return None
 
 @st.cache_data(ttl=600)
 def load_database():
@@ -37,7 +29,6 @@ def apply_watermark(image_path):
     Opens the actual Affinity exported ID and applies the secure watermark.
     """
     try:
-        import os
         if not os.path.exists(image_path):
             return None
             
@@ -108,15 +99,14 @@ if df is not None:
                 
                 first_name = row.get('First_Name', '')
                 surname = row.get('Surname', '')
-                constituency = row.get('Constituency', '')
                 mp_id = row.get('MP_ID', '') # Grab their official ID number
                 
                 st.markdown("---")
                 
                 with st.spinner("Retrieving your secure preview..."):
-                    # Define paths where the Affinity exports should be
-                    front_path = f"exported_ids/{mp_id}_front.jpg"
-                    back_path = f"exported_ids/{mp_id}_back.jpg"
+                    # Look in the main folder for the images
+                    front_path = f"{mp_id}_front.jpg"
+                    back_path = f"{mp_id}_back.jpg"
                     
                     # Apply watermarks
                     front_preview = apply_watermark(front_path)
@@ -145,6 +135,5 @@ if df is not None:
                             
                     else:
                         st.warning(f"⚠️ We could not locate the exported ID designs for {first_name} {surname} (ID: {mp_id}).")
-                        st.info("Admin: Please ensure the Affinity exports are saved in the 'exported_ids' folder as 'MP_ID_front.jpg' and 'MP_ID_back.jpg'.")
 else:
     st.error("Connecting to the database... If this persists, the Google Drive link may not be public.")
