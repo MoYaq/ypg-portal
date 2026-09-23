@@ -4,9 +4,18 @@ import requests
 import io
 import re
 from PIL import Image, ImageDraw
-import os
 
 st.set_page_config(page_title="YPG Credentials Portal", page_icon="🇬🇭", layout="centered")
+
+# --- HIDE STREAMLIT BRANDING & GITHUB LINK ---
+hide_menu_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_menu_style, unsafe_allow_html=True)
 
 # --- Form Links ---
 NEW_REG_LINK = "https://forms.gle/3xyDZGTJWnNuxhY19"
@@ -25,13 +34,9 @@ def load_database():
         return None
 
 def apply_watermark(image_path):
-    """
-    Opens the actual Affinity exported ID and applies the secure watermark.
-    """
     try:
-        if not os.path.exists(image_path):
-            return None
-            
+        # Load the image from the internet (GitHub)
+        # image_path is just the filename now
         canvas = Image.open(image_path).convert("RGBA")
         
         # THE SECURITY WATERMARK (Anti-Screenshot)
@@ -45,7 +50,6 @@ def apply_watermark(image_path):
         font_size = int(canvas.width * 0.06)
         
         # Draw multiple rows of text to cover the whole image top to bottom
-        # We start in the negative and go past the height to ensure coverage after rotation
         for y in range(-canvas.height, canvas.height * 2, int(canvas.height * 0.12)):
             watermark_draw.text((-canvas.width, y), text_line, 
                                 fill=(0, 0, 0, 160), # Dark black with transparency
@@ -108,7 +112,7 @@ if df is not None:
                 st.markdown("---")
                 
                 with st.spinner("Retrieving your secure preview..."):
-                    # Look in the main folder for the images
+                    # Look in the main folder for the images (since we skipped the folder earlier)
                     front_path = f"{mp_id}_front.jpg"
                     back_path = f"{mp_id}_back.jpg"
                     
