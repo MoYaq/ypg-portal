@@ -38,17 +38,21 @@ def apply_watermark(image_path):
         watermark = Image.new("RGBA", canvas.size, (255, 255, 255, 0))
         watermark_draw = ImageDraw.Draw(watermark)
         
-        # Draw huge diagonal text anchored to the center of the image
-        center_x = canvas.width // 2
-        center_y = canvas.height // 2
+        # Create a repeating line of text
+        text_line = "DRAFT - DO NOT PRINT   " * 5
         
-        # We use a built-in default font for maximum compatibility on cloud servers
-        watermark_draw.text((center_x, center_y), "DRAFT\nFOR REVIEW ONLY\nDO NOT PRINT", 
-                            fill=(255, 255, 255, 140), # High opacity for protection
-                            anchor="mm", align="center", font_size=int(canvas.width * 0.12))
+        # Determine size of the text
+        font_size = int(canvas.width * 0.06)
         
-        # Rotate the watermark diagonally
-        watermark = watermark.rotate(35, expand=False)
+        # Draw multiple rows of text to cover the whole image top to bottom
+        # We start in the negative and go past the height to ensure coverage after rotation
+        for y in range(-canvas.height, canvas.height * 2, int(canvas.height * 0.12)):
+            watermark_draw.text((-canvas.width, y), text_line, 
+                                fill=(0, 0, 0, 160), # Dark black with transparency
+                                font_size=font_size)
+        
+        # Rotate the entire watermark layer diagonally
+        watermark = watermark.rotate(35, expand=False, center=(canvas.width // 2, canvas.height // 2))
         
         # Merge the watermark onto the ID card
         final_preview = Image.alpha_composite(canvas, watermark)
